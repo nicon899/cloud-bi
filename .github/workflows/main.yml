@@ -20,7 +20,10 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ secrets.AZURE_RG }}
         template: ./template.json
-        parameters: ./parameters.json
+        parameters: 
+          - ./parameters.json
+          - administratorLoginPassword=${{ secrets.AZURE_SQL_ADMIN_PWD }}
+          
 
     # output containerName variable from template
-    - run: echo ${{ steps.deploy.outputs.hostingPlanName }}
+    - run: echo ${{ steps.deploy.outputs.containerName }}
