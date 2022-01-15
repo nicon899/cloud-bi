@@ -36,10 +36,10 @@
             "value": "cloudbiservicebus"
         },
         "hybridConnectionName": {
-            "value": "hybridConnection"
+            "value": "hcToOnPremSQL"
         },
         "onPremiseEndpoint": {
-            "value": "192.168.181.35:443"
+            "value": "192.168.181.35:1443"
         }
     }
 }

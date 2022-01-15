@@ -143,7 +143,7 @@
                 "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]",
                 "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
             ],
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "properties": {
                 "serviceBusNamespace": "[parameters('relayName')]",
                 "relayName": "[parameters('hybridConnectionName')]",
