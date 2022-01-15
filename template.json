@@ -158,6 +158,6 @@
         }
     ],
     "variables": { 
-        "hybridConnectionResourceId": "[resourceId(resourceGroup().location, 'Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
+        "hybridConnectionResourceId": "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
     }
 }
