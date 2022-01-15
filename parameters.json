@@ -2,50 +2,84 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "subscriptionId": {
-            "value": "9838fdd0-7819-4aab-bcdc-0fe4cf4ef9d8"
+        "collation": {
+            "value": "SQL_Latin1_General_CP1_CI_AS"
         },
-        "name": {
-            "value": "bi-dev-func"
+        "databaseName": {
+            "value": "bi-dev-sql-db"
+        },
+        "tier": {
+            "value": "GeneralPurpose"
+        },
+        "skuName": {
+            "value": "GP_Gen5_2"
         },
         "location": {
-            "value": "West Europe"
+            "value": "westeurope"
+        },
+        "maxSizeBytes": {
+            "value": 536870912000
+        },
+        "serverName": {
+            "value": "bi-dev-sql-server"
+        },
+        "administrators": {
+            "value": {
+                "administratorType": "activeDirectory",
+                "login": "Cloud-BI",
+                "sid": "d0448de2-6769-4467-a022-862fdf3e4bf3",
+                "tenantId": "194b8bcb-4aa6-476f-b7a5-bda4b3ae61bd",
+                "azureADOnlyAuthentication": true,
+                "principalType": "Group"
+            }
+        },
+
+
+        
+        "subscriptionId": {
+            "type": "string"
+        },
+        "funcName": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
         },
         "hostingPlanName": {
-            "value": "bi-dev-asp"
+            "type": "string"
         },
         "serverFarmResourceGroup": {
-            "value": "bi-dev-rg"
+            "type": "string"
         },
         "alwaysOn": {
-            "value": true
+            "type": "bool"
         },
         "storageAccountName": {
-            "value": "storageaccountbidevafba"
-        },
-        "sku": {
-            "value": "Standard"
-        },
-        "skuCode": {
-            "value": "S1"
+            "type": "string"
         },
         "netFrameworkVersion": {
-            "value": "v6.0"
+            "type": "string"
+        },
+        "sku": {
+            "type": "string"
+        },
+        "skuCode": {
+            "type": "string"
         },
         "relayName": {
-            "value": "cloudbiservicebus"
+            "type": "string"
         },
         "hybridConnectionName": {
-            "value": "hcToOnPremSQL"
+            "type": "string"
         },
         "onPremiseEndpoint": {
-            "value": "192.168.181.35:1443"
+            "type": "string"
         },
         "onPremiseEndpointIP": {
-            "value": "192.168.181.35"
+            "type": "string"
         },
         "onPremiseEndpointPORT": {
-            "value": "1443"
+            "type": "string"
         }
     }
 }

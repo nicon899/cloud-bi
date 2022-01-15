@@ -1,39 +1,14 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        // Azure SQL
-        "administrators": {
-            "type": "object",
-            "defaultValue": {}
-        },
-        "collation": {
-            "type": "string"
-        },
-        "databaseName": {
-            "type": "string"
-        },
-        "tier": {
-            "type": "string"
-        },
-        "skuName": {
-            "type": "string"
-        },
-        "location": {
-            "type": "string"
-        },
-        "maxSizeBytes": {
-            "type": "int"
-        },
-        "serverName": {
-            "type": "string"
-        },
-
-        // Azure Functions
         "subscriptionId": {
             "type": "string"
         },
-        "funcName": {
+        "name": {
+            "type": "string"
+        },
+        "location": {
             "type": "string"
         },
         "hostingPlanName": {
@@ -73,35 +48,8 @@
             "type": "string"
         }
     },
-    "resources": [{
-        "apiVersion": "2020-11-01-preview",
-            "type": "Microsoft.Sql/servers",
-            "location": "[parameters('location')]",
-            "name": "[parameters('serverName')]",
-            "properties": {
-                "administrators": "[parameters('administrators')]"
-            },
-            "resources": [
-                {
-                    "apiVersion": "2021-02-01-preview",
-                    "dependsOn": [
-                        "[concat('Microsoft.Sql/servers/', parameters('serverName'))]"
-                    ],
-                    "location": "[parameters('location')]",
-                    "name": "[parameters('databaseName')]",
-                    "properties": {
-                        "collation": "[parameters('collation')]",
-                        "maxSizeBytes": "[parameters('maxSizeBytes')]"
-                    },
-                    "sku": {
-                        "name": "[parameters('skuName')]",
-                        "tier": "[parameters('tier')]"
-                    },
-                    "type": "databases"
-                }
-            ]
-    },
-     {
+    "resources": [
+        {
             "apiVersion": "2018-01-01-preview",
             "name": "[parameters('relayName')]",
             "type": "Microsoft.Relay/Namespaces",
@@ -123,7 +71,7 @@
         },
         {
             "apiVersion": "2018-11-01",
-            "name": "[parameters('funcName')]",
+            "name": "[parameters('name')]",
             "type": "Microsoft.Web/sites",
             "kind": "functionapp",
             "location": "[parameters('location')]",
@@ -133,7 +81,7 @@
                 "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
             ],
             "properties": {
-                "name": "[parameters('funcName')]",
+                "name": "[parameters('name')]",
                 "siteConfig": {
                     "appSettings": [
                         {
@@ -193,11 +141,11 @@
             }
         },
         {
-            "name": "[concat(parameters('funcName'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
+            "name": "[concat(parameters('name'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
             "type": "Microsoft.Web/sites/hybridConnectionNamespaces/relays",
             "apiVersion": "2018-02-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcName'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('name'))]",
                 "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]",
                 "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
             ],
