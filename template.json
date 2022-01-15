@@ -30,9 +30,6 @@
         },
 
         // Azure Functions
-        "subscriptionId": {
-            "type": "string"
-        },
         "funcName": {
             "type": "string"
         },
@@ -73,7 +70,9 @@
             "type": "string"
         }
     },
-    "resources": [{
+    "resources": [
+        // AZURE SQL
+        {
         "apiVersion": "2020-11-01-preview",
             "type": "Microsoft.Sql/servers",
             "location": "[parameters('location')]",
@@ -101,6 +100,8 @@
                 }
             ]
     },
+
+    // AZURE FUNCTION
      {
             "apiVersion": "2018-01-01-preview",
             "name": "[parameters('relayName')]",
@@ -116,7 +117,7 @@
                     ],
                     "properties": {
                         "requiresClientAuthorization": "true",
-                        "userMetadata": "[concat('{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}')]"
+                        "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
                     }
                 }
             ]
@@ -157,7 +158,7 @@
                     "alwaysOn": "[parameters('alwaysOn')]",
                     "netFrameworkVersion": "[parameters('netFrameworkVersion')]"
                 },
-                "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
                 "clientAffinityEnabled": false
             }
         },

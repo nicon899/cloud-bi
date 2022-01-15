@@ -35,51 +35,44 @@
         },
 
 
-        
-        "subscriptionId": {
-            "type": "string"
-        },
         "funcName": {
-            "type": "string"
-        },
-        "location": {
-            "type": "string"
+            "value": "bi-dev-func"
         },
         "hostingPlanName": {
-            "type": "string"
+            "value": "bi-dev-asp"
         },
         "serverFarmResourceGroup": {
-            "type": "string"
+            "value": "bi-dev-rg"
         },
         "alwaysOn": {
-            "type": "bool"
+            "value": true
         },
         "storageAccountName": {
-            "type": "string"
-        },
-        "netFrameworkVersion": {
-            "type": "string"
+            "value": "storageaccountbidevafba"
         },
         "sku": {
-            "type": "string"
+            "value": "Standard"
         },
         "skuCode": {
-            "type": "string"
+            "value": "S1"
+        },
+        "netFrameworkVersion": {
+            "value": "v6.0"
         },
         "relayName": {
-            "type": "string"
+            "value": "cloudbiservicebus"
         },
         "hybridConnectionName": {
-            "type": "string"
+            "value": "hcToOnPremSQL"
         },
         "onPremiseEndpoint": {
-            "type": "string"
+            "value": "nucsql.my01.local:1433"
         },
         "onPremiseEndpointIP": {
-            "type": "string"
+            "value": "nucsql.my01.local"
         },
         "onPremiseEndpointPORT": {
-            "type": "string"
+            "value": "1433"
         }
     }
 }
