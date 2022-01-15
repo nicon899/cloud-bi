@@ -26,8 +26,8 @@
         "administrators": {
             "value": {
                 "administratorType": "activeDirectory",
-                "login": "Admin",
-                "sid": "4fb16ad7-cdb4-4aa1-8419-1d2f8c445397",
+                "login": "Cloud-BI",
+                "sid": "d0448de2-6769-4467-a022-862fdf3e4bf3",
                 "tenantId": "194b8bcb-4aa6-476f-b7a5-bda4b3ae61bd",
                 "azureADOnlyAuthentication": true,
                 "principalType": "Group"
