@@ -31,27 +31,41 @@
         },
         "skuCode": {
             "type": "string"
+        },
+        "namespaceName": {
+            "type": "string"
+        },
+        "relayName": {
+            "type": "string"
+        },
+        "hybridConnectionName": {
+            "type": "string"
+        },
+        "onPremiseEndpoint": {
+            "type": "string"
         }
-        // "relayName": {
-        //     "type": "string"
-        // },
-        // "hybridConnectionName": {
-        //     "type": "string"
-        // },
-        // "onPremiseEndpoint": {
-        //     "type": "string"
-        // }
     },
     "resources": [
-        // {
-        //     "type": "Microsoft.Relay/namespaces/hybridConnections",
-        //     "apiVersion": "2017-04-01",
-        //     "name": "[concat(parameters('relayName'), '/', parameters('hybridConnectionName'))]",
-        //     "properties": {
-        //         "requiresClientAuthorization": "bool",
-        //         "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
-        //     }
-        // },
+        {
+            "apiVersion": "2018-01-01-preview",
+            "name": "[parameters('namespaceName')]",
+            "type": "Microsoft.Relay/Namespaces",
+            "location": "[parameters('location')]",
+            "resources": [
+                {
+                    "apiVersion": "2017-04-01",
+                    "name": "[parameters('hybridConnectionName')]",
+                    "type": "HybridConnections",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Relay/namespaces', parameters('namespaceName'))]"
+                    ],
+                    "properties": {
+                        "requiresClientAuthorization": "true",
+                        "userMetadata": "[concat('{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}')]"
+                    }
+                }
+            ]
+        },
         {
             "apiVersion": "2018-11-01",
             "name": "[parameters('name')]",
