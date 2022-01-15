@@ -40,6 +40,12 @@
         },
         "onPremiseEndpoint": {
             "type": "string"
+        },
+        "onPremiseEndpointIP": {
+            "type": "string"
+        },
+        "onPremiseEndpointPORT": {
+            "type": "string"
         }
     },
     "resources": [
@@ -148,8 +154,8 @@
                 "serviceBusNamespace": "[parameters('relayName')]",
                 "relayName": "[parameters('hybridConnectionName')]",
                 "relayArmUri": "[variables('hybridConnectionResourceId')]",
-                "hostName": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[0]]",
-                "port": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[1]]"
+                "hostName": "[parameters('onPremiseEndpointIP')]",
+                "port": "[parameters('onPremiseEndpointPORT')]"
             }
         }
     ],
