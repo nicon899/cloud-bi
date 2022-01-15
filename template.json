@@ -1,59 +1,148 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "administrators": {
-            "type": "object",
-            "defaultValue": {}
-        },
-        "collation": {
+        "subscriptionId": {
             "type": "string"
         },
-        "databaseName": {
-            "type": "string"
-        },
-        "tier": {
-            "type": "string"
-        },
-        "skuName": {
+        "name": {
             "type": "string"
         },
         "location": {
             "type": "string"
         },
-        "maxSizeBytes": {
-            "type": "int"
+        "hostingPlanName": {
+            "type": "string"
         },
-        "serverName": {
+        "serverFarmResourceGroup": {
+            "type": "string"
+        },
+        "alwaysOn": {
+            "type": "bool"
+        },
+        "storageAccountName": {
+            "type": "string"
+        },
+        "netFrameworkVersion": {
+            "type": "string"
+        },
+        "sku": {
+            "type": "string"
+        },
+        "skuCode": {
+            "type": "string"
+        },
+        "relayName": {
+            "type": "string"
+        },
+        "hybridConnectionName": {
+            "type": "string"
+        },
+        "onPremiseEndpoint": {
             "type": "string"
         }
     },
-    "resources": [{
-        "apiVersion": "2020-11-01-preview",
-            "type": "Microsoft.Sql/servers",
-            "location": "[parameters('location')]",
-            "name": "[parameters('serverName')]",
+    "resources": [
+        {
+            "type": "Microsoft.Relay/namespaces/hybridConnections",
+            "apiVersion": "2017-04-01",
+            "name": "[concat(parameters('relayName'), '/', parameters('hybridConnectionName'))]",
             "properties": {
-                "administrators": "[parameters('administrators')]"
-            },
-            "resources": [
-                {
-                    "apiVersion": "2021-02-01-preview",
-                    "dependsOn": [
-                        "[concat('Microsoft.Sql/servers/', parameters('serverName'))]"
+                "requiresClientAuthorization": "bool",
+                "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
+            }
+        },
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('name')]",
+            "type": "Microsoft.Web/sites",
+            "kind": "functionapp",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+            ],
+            "properties": {
+                "name": "[parameters('name')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~4"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "dotnet"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                        }
                     ],
-                    "location": "[parameters('location')]",
-                    "name": "[parameters('databaseName')]",
-                    "properties": {
-                        "collation": "[parameters('collation')]",
-                        "maxSizeBytes": "[parameters('maxSizeBytes')]"
+                    "cors": {
+                        "allowedOrigins": [
+                            "https://portal.azure.com"
+                        ]
                     },
-                    "sku": {
-                        "name": "[parameters('skuName')]",
-                        "tier": "[parameters('tier')]"
-                    },
-                    "type": "databases"
-                }
-            ]
-    }]
+                    "alwaysOn": "[parameters('alwaysOn')]",
+                    "netFrameworkVersion": "[parameters('netFrameworkVersion')]"
+                },
+                "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                "clientAffinityEnabled": false
+            }   
+        },
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('hostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[parameters('location')]",
+            "kind": "",
+            "tags": {},
+            "dependsOn": [],
+            "properties": {
+                "name": "[parameters('hostingPlanName')]",
+                "zoneRedundant": false
+            },
+            "sku": {
+                "Tier": "[parameters('sku')]",
+                "Name": "[parameters('skuCode')]"
+            }
+        },
+        {
+            "apiVersion": "2019-06-01",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2"
+            }
+        },
+        {
+            "name": "[concat(parameters('name'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
+            "type": "Microsoft.Web/sites/hybridConnectionNamespaces/relays",
+            "apiVersion": "2018-02-01",
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/', parameters('name'))]"
+            ],
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "serviceBusNamespace": "relayName",
+                "relayName": "hybridConnectionName",
+                "relayArmUri": "[variables('hybridConnectionResourceId')]",
+                "hostName": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[0]]",
+                "port": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[1]]",
+                "sendKeyName": "defaultSender",
+                "sendKeyValue": "[listkeys(concat(variables('hybridConnectionResourceId'), '/authorizationRules/defaultSender'), '2017-04-01').primaryKey]"
+            }
+        }
+    ],
+    "variables": { 
+        "hybridConnectionResourceId": "[resourceId(resourceGroup().location, 'Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
+    }
 }

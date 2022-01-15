@@ -2,36 +2,44 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "collation": {
-            "value": "SQL_Latin1_General_CP1_CI_AS"
+        "subscriptionId": {
+            "value": "9838fdd0-7819-4aab-bcdc-0fe4cf4ef9d8"
         },
-        "databaseName": {
-            "value": "bi-dev-sql-db"
-        },
-        "tier": {
-            "value": "GeneralPurpose"
-        },
-        "skuName": {
-            "value": "GP_Gen5_2"
+        "name": {
+            "value": null
         },
         "location": {
-            "value": "westeurope"
+            "value": "West Europe"
         },
-        "maxSizeBytes": {
-            "value": 536870912000
+        "hostingPlanName": {
+            "value": "bi-dev-asp"
         },
-        "serverName": {
-            "value": "bi-dev-sql-server"
+        "serverFarmResourceGroup": {
+            "value": "bi-dev-rg"
         },
-        "administrators": {
-            "value": {
-                "administratorType": "activeDirectory",
-                "login": "Cloud-BI",
-                "sid": "d0448de2-6769-4467-a022-862fdf3e4bf3",
-                "tenantId": "194b8bcb-4aa6-476f-b7a5-bda4b3ae61bd",
-                "azureADOnlyAuthentication": true,
-                "principalType": "Group"
-            }
+        "alwaysOn": {
+            "value": true
+        },
+        "storageAccountName": {
+            "value": "bi-dev-st-func"
+        },
+        "sku": {
+            "value": "Standard"
+        },
+        "skuCode": {
+            "value": "S1"
+        },
+        "netFrameworkVersion": {
+            "value": "v6.0"
+        },
+        "relayName": {
+            "value": "bi-dev-relay"
+        },
+        "hybridConnectionName": {
+            "value": "bi-dev-hc"
+        },
+        "onPremiseEndpoint": {
+            "value": "192.168.181.35:443"
         }
     }
 }

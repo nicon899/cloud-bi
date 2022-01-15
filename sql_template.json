@@ -1,0 +1,59 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "administrators": {
+            "type": "object",
+            "defaultValue": {}
+        },
+        "collation": {
+            "type": "string"
+        },
+        "databaseName": {
+            "type": "string"
+        },
+        "tier": {
+            "type": "string"
+        },
+        "skuName": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "maxSizeBytes": {
+            "type": "int"
+        },
+        "serverName": {
+            "type": "string"
+        }
+    },
+    "resources": [{
+        "apiVersion": "2020-11-01-preview",
+            "type": "Microsoft.Sql/servers",
+            "location": "[parameters('location')]",
+            "name": "[parameters('serverName')]",
+            "properties": {
+                "administrators": "[parameters('administrators')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2021-02-01-preview",
+                    "dependsOn": [
+                        "[concat('Microsoft.Sql/servers/', parameters('serverName'))]"
+                    ],
+                    "location": "[parameters('location')]",
+                    "name": "[parameters('databaseName')]",
+                    "properties": {
+                        "collation": "[parameters('collation')]",
+                        "maxSizeBytes": "[parameters('maxSizeBytes')]"
+                    },
+                    "sku": {
+                        "name": "[parameters('skuName')]",
+                        "tier": "[parameters('tier')]"
+                    },
+                    "type": "databases"
+                }
+            ]
+    }]
+}

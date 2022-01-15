@@ -1,0 +1,37 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "collation": {
+            "value": "SQL_Latin1_General_CP1_CI_AS"
+        },
+        "databaseName": {
+            "value": "bi-dev-sql-db"
+        },
+        "tier": {
+            "value": "GeneralPurpose"
+        },
+        "skuName": {
+            "value": "GP_Gen5_2"
+        },
+        "location": {
+            "value": "westeurope"
+        },
+        "maxSizeBytes": {
+            "value": 536870912000
+        },
+        "serverName": {
+            "value": "bi-dev-sql-server"
+        },
+        "administrators": {
+            "value": {
+                "administratorType": "activeDirectory",
+                "login": "Cloud-BI",
+                "sid": "d0448de2-6769-4467-a022-862fdf3e4bf3",
+                "tenantId": "194b8bcb-4aa6-476f-b7a5-bda4b3ae61bd",
+                "azureADOnlyAuthentication": true,
+                "principalType": "Group"
+            }
+        }
+    }
+}
