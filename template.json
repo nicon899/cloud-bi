@@ -31,27 +31,27 @@
         },
         "skuCode": {
             "type": "string"
-        },
-        "relayName": {
-            "type": "string"
-        },
-        "hybridConnectionName": {
-            "type": "string"
-        },
-        "onPremiseEndpoint": {
-            "type": "string"
         }
+        // "relayName": {
+        //     "type": "string"
+        // },
+        // "hybridConnectionName": {
+        //     "type": "string"
+        // },
+        // "onPremiseEndpoint": {
+        //     "type": "string"
+        // }
     },
     "resources": [
-        {
-            "type": "Microsoft.Relay/namespaces/hybridConnections",
-            "apiVersion": "2017-04-01",
-            "name": "[concat(parameters('relayName'), '/', parameters('hybridConnectionName'))]",
-            "properties": {
-                "requiresClientAuthorization": "bool",
-                "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
-            }
-        },
+        // {
+        //     "type": "Microsoft.Relay/namespaces/hybridConnections",
+        //     "apiVersion": "2017-04-01",
+        //     "name": "[concat(parameters('relayName'), '/', parameters('hybridConnectionName'))]",
+        //     "properties": {
+        //         "requiresClientAuthorization": "bool",
+        //         "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
+        //     }
+        // },
         {
             "apiVersion": "2018-11-01",
             "name": "[parameters('name')]",
@@ -122,28 +122,28 @@
                 "supportsHttpsTrafficOnly": true,
                 "minimumTlsVersion": "TLS1_2"
             }
-        },
-        {
-            "name": "[concat(parameters('name'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
-            "type": "Microsoft.Web/sites/hybridConnectionNamespaces/relays",
-            "apiVersion": "2018-02-01",
-            "dependsOn": [
-                "[concat('Microsoft.Web/sites/', parameters('name'))]",
-                "[concat(parameters('relayName'), '/', parameters('hybridConnectionName'))]"
-            ],
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "serviceBusNamespace": "[parameters('relayName')]",
-                "relayName": "[parameters('hybridConnectionName')]",
-                "relayArmUri": "[variables('hybridConnectionResourceId')]",
-                "hostName": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[0]]",
-                "port": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[1]]",
-                "sendKeyName": "defaultSender",
-                "sendKeyValue": "[listkeys(concat(variables('hybridConnectionResourceId'), '/authorizationRules/defaultSender'), '2017-04-01').primaryKey]"
-            }
         }
-    ],
-    "variables": { 
-        "hybridConnectionResourceId": "[resourceId(resourceGroup().location, 'Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
-    }
+        // {
+        //     "name": "[concat(parameters('name'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
+        //     "type": "Microsoft.Web/sites/hybridConnectionNamespaces/relays",
+        //     "apiVersion": "2018-02-01",
+        //     "dependsOn": [
+        //         "[concat('Microsoft.Web/sites/', parameters('name'))]",
+        //         "[concat(parameters('relayName'), '/', parameters('hybridConnectionName'))]"
+        //     ],
+        //     "location": "[resourceGroup().location]",
+        //     "properties": {
+        //         "serviceBusNamespace": "[parameters('relayName')]",
+        //         "relayName": "[parameters('hybridConnectionName')]",
+        //         "relayArmUri": "[variables('hybridConnectionResourceId')]",
+        //         "hostName": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[0]]",
+        //         "port": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[1]]",
+        //         "sendKeyName": "defaultSender",
+        //         "sendKeyValue": "[listkeys(concat(variables('hybridConnectionResourceId'), '/authorizationRules/defaultSender'), '2017-04-01').primaryKey]"
+        //     }
+        // }
+    ]
+    // "variables": { 
+    //     "hybridConnectionResourceId": "[resourceId(resourceGroup().location, 'Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
+    // }
 }
