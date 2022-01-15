@@ -32,9 +32,6 @@
         "skuCode": {
             "type": "string"
         },
-        "namespaceName": {
-            "type": "string"
-        },
         "relayName": {
             "type": "string"
         },
@@ -48,7 +45,7 @@
     "resources": [
         {
             "apiVersion": "2018-01-01-preview",
-            "name": "[parameters('namespaceName')]",
+            "name": "[parameters('relayName')]",
             "type": "Microsoft.Relay/Namespaces",
             "location": "[parameters('location')]",
             "resources": [
@@ -57,7 +54,7 @@
                     "name": "[parameters('hybridConnectionName')]",
                     "type": "HybridConnections",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Relay/Namespaces', parameters('namespaceName'))]"
+                        "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]"
                     ],
                     "properties": {
                         "requiresClientAuthorization": "true",
@@ -143,12 +140,13 @@
             "apiVersion": "2018-02-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/sites', parameters('name'))]",
-                "[resourceId('Microsoft.Relay/Namespaces', parameters('namespaceName'))]"
+                "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]",
+                "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
             ],
             "location": "[resourceGroup().location]",
             "properties": {
-                "serviceBusNamespace": "[parameters('namespaceName')]",
-                "relayName": "[parameters('relayName')]",
+                "serviceBusNamespace": "[parameters('relayName')]",
+                "relayName": "[parameters('hybridConnectionName')]",
                 "relayArmUri": "[variables('hybridConnectionResourceId')]",
                 "hostName": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[0]]",
                 "port": "[split(json(reference(variables('hybridConnectionResourceId'), '2017-04-01').userMetadata)[0].value, ':')[1]]",

@@ -32,11 +32,8 @@
         "netFrameworkVersion": {
             "value": "v6.0"
         },
-        "namespaceName": {
-            "value": "cloudbiservicebus"
-        },
         "relayName": {
-            "value": "relay"
+            "value": "cloudbiservicebus"
         },
         "hybridConnectionName": {
             "value": "hybridConnection"
