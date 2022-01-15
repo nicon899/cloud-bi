@@ -6,7 +6,7 @@
             "value": "9838fdd0-7819-4aab-bcdc-0fe4cf4ef9d8"
         },
         "name": {
-            "value": null
+            "value": "bi-dev-func"
         },
         "location": {
             "value": "West Europe"
@@ -21,7 +21,7 @@
             "value": true
         },
         "storageAccountName": {
-            "value": "bi-dev-st-func"
+            "value": "bi-dev-st_func"
         },
         "sku": {
             "value": "Standard"
