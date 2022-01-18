@@ -41,9 +41,6 @@
         "hostingPlanName": {
             "value": "bi-dev-asp"
         },
-        "serverFarmResourceGroup": {
-            "value": "bi-dev-rg"
-        },
         "alwaysOn": {
             "value": true
         },
@@ -73,6 +70,28 @@
         },
         "onPremiseEndpointPORT": {
             "value": "1433"
+        },
+
+        "powerbi_name": {
+            "value": "powerbiserviceforcloudbi"
+        },
+        "powerbi_sku": {
+            "value": "A4"
+        },
+        "powerbi_admin": {
+            "value": "Alice@sag013.onmicrosoft.com"
+        },
+        "powerbi_mode": {
+            "value": "Gen2"
+        },
+        "powerbi_vnet_name": {
+            "value": "bi-dev-vnet_powerbi-vdg"
+        },
+        "powerbi_subnet_name": {
+            "value": "gatewayforpowerbi"
+        },
+        "powerbi-sql_vnet_rule_name": {
+            "value": "vnetRule_gatewayforpowerbi"
         }
     }
 }

@@ -2,7 +2,11 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        // Azure SQL
+        "location": {
+            "type": "string"
+        },
+
+        // AZURE SQL
         "administrators": {
             "type": "object",
             "defaultValue": {}
@@ -19,9 +23,6 @@
         "skuName": {
             "type": "string"
         },
-        "location": {
-            "type": "string"
-        },
         "maxSizeBytes": {
             "type": "int"
         },
@@ -29,14 +30,11 @@
             "type": "string"
         },
 
-        // Azure Functions
+        // AZURE FUNCTIONS
         "funcName": {
             "type": "string"
         },
         "hostingPlanName": {
-            "type": "string"
-        },
-        "serverFarmResourceGroup": {
             "type": "string"
         },
         "alwaysOn": {
@@ -68,12 +66,35 @@
         },
         "onPremiseEndpointPORT": {
             "type": "string"
+        },
+
+        // POWER BI
+        "powerbi_name": {
+            "type": "string"
+        },
+        "powerbi_sku": {
+            "type": "string"
+        },
+        "powerbi_admin": {
+            "type": "string"
+        },
+        "powerbi_mode": {
+            "type": "string"
+        },
+        "powerbi_vnet_name": {
+            "type": "String"
+        },
+        "powerbi_subnet_name": {
+            "type": "String"
+        },
+        "powerbi-sql_vnet_rule_name": {
+            "type": "String"
         }
     },
     "resources": [
         // AZURE SQL
         {
-        "apiVersion": "2020-11-01-preview",
+            "apiVersion": "2020-11-01-preview",
             "type": "Microsoft.Sql/servers",
             "location": "[parameters('location')]",
             "name": "[parameters('serverName')]",
@@ -97,30 +118,50 @@
                         "tier": "[parameters('tier')]"
                     },
                     "type": "databases"
-                }
-            ]
-    },
-
-    // AZURE FUNCTION
-     {
-            "apiVersion": "2018-01-01-preview",
-            "name": "[parameters('relayName')]",
-            "type": "Microsoft.Relay/Namespaces",
-            "location": "[parameters('location')]",
-            "resources": [
+                },
                 {
-                    "apiVersion": "2017-04-01",
-                    "name": "[parameters('hybridConnectionName')]",
-                    "type": "HybridConnections",
+                    "type": "Microsoft.Sql/servers/virtualNetworkRules",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]"
+                        "[resourceId('Microsoft.Sql/servers/', parameters('serverName'))]",
+                        "[resourceId('Microsoft.Sql/servers/databases', parameters('serverName'), parameters('databaseName'))]"
                     ],
+                    "apiVersion": "2015-05-01-preview",
+                    "name": "[concat(parameters('databaseName'), '/' ,parameters('powerbi-sql_vnet_rule_name'))]",
                     "properties": {
-                        "requiresClientAuthorization": "true",
-                        "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
+                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('powerbi_vnet_name'), parameters('powerbi_subnet_name'))]"
                     }
                 }
             ]
+        },
+
+
+        // AZURE FUNCTION
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('hostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[parameters('location')]",
+            "properties": {
+                "name": "[parameters('hostingPlanName')]",
+                "zoneRedundant": false
+            },
+            "sku": {
+                "Tier": "[parameters('sku')]",
+                "Name": "[parameters('skuCode')]"
+            }
+        },
+        {
+            "apiVersion": "2019-06-01",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2"
+            }
         },
         {
             "apiVersion": "2018-11-01",
@@ -128,11 +169,13 @@
             "type": "Microsoft.Web/sites",
             "kind": "functionapp",
             "location": "[parameters('location')]",
-            "tags": {},
             "dependsOn": [
                 "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
                 "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
             ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "name": "[parameters('funcName')]",
                 "siteConfig": {
@@ -163,35 +206,24 @@
             }
         },
         {
-            "apiVersion": "2018-11-01",
-            "name": "[parameters('hostingPlanName')]",
-            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-01-01-preview",
+            "name": "[parameters('relayName')]",
+            "type": "Microsoft.Relay/Namespaces",
             "location": "[parameters('location')]",
-            "kind": "",
-            "tags": {},
-            "dependsOn": [],
-            "properties": {
-                "name": "[parameters('hostingPlanName')]",
-                "zoneRedundant": false
-            },
-            "sku": {
-                "Tier": "[parameters('sku')]",
-                "Name": "[parameters('skuCode')]"
-            }
-        },
-        {
-            "apiVersion": "2019-06-01",
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[parameters('storageAccountName')]",
-            "location": "[parameters('location')]",
-            "tags": {},
-            "sku": {
-                "name": "Standard_LRS"
-            },
-            "properties": {
-                "supportsHttpsTrafficOnly": true,
-                "minimumTlsVersion": "TLS1_2"
-            }
+            "resources": [
+                {
+                    "apiVersion": "2017-04-01",
+                    "name": "[parameters('hybridConnectionName')]",
+                    "type": "HybridConnections",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]"
+                    ],
+                    "properties": {
+                        "requiresClientAuthorization": "true",
+                        "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
+                    }
+                }
+            ]
         },
         {
             "name": "[concat(parameters('funcName'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
@@ -211,6 +243,66 @@
                 "port": "[parameters('onPremiseEndpointPORT')]",
                 "sendKeyName": "RootManageSharedAccessKey",
                 "sendKeyValue": "[listkeys(resourceId('Microsoft.Relay/Namespaces/AuthorizationRules', parameters('relayName'), 'RootManageSharedAccessKey'), '2017-04-01').primaryKey]"
+            }
+        }
+
+        // Power BI
+        ,
+        {
+            "apiVersion": "2021-01-01",
+            "name": "[parameters('powerbi_name')]",
+            "location": "[parameters('location')]",
+            "type": "Microsoft.PowerBIDedicated/capacities",
+            "sku": {
+                "name": "[parameters('powerbi_sku')]"
+            },
+            "properties": {
+                "administration": {
+                    "members": [
+                        "[parameters('powerbi_admin')]"
+                    ]
+                },
+                "mode": "[parameters('powerbi_mode')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('powerbi_vnet_name')]",
+            "location": "westeurope",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('powerbi_subnet_name')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24",
+                            "serviceEndpoints": [
+                                {
+                                    "service": "Microsoft.Sql",
+                                    "locations": [
+                                        "westeurope"
+                                    ]
+                                }
+                            ],
+                            "delegations": [
+                                {
+                                    "name": "Microsoft.PowerPlatform.vnetaccesslinks",
+                                    "properties": {
+                                        "serviceName": "Microsoft.PowerPlatform/vnetaccesslinks"
+                                    }
+                                }
+                            ],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    }
+                ],
+                "enableDdosProtection": false
             }
         }
     ]
