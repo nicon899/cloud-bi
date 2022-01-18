@@ -329,7 +329,21 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
                 "clientAffinityEnabled": false,
                 "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('func_subnet_name'))]"
-            }
+            },
+            "resources": [
+                {
+                    "type": "Microsoft.Web/sites/config",
+                    "apiVersion": "2021-02-01",
+                    "name": "[concat(parameters('funcName'), '/web')]",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('funcName'))]"
+                    ],
+                    "properties": {
+                        "vnetRouteAllEnabled": true
+                    }
+                }
+            ]
         },
         {
             "apiVersion": "2018-01-01-preview",
