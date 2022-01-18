@@ -5,6 +5,9 @@
         "location": {
             "type": "string"
         },
+        "vnet_name": {
+            "type": "String"
+        },
 
         // AZURE SQL
         "administrators": {
@@ -27,6 +30,29 @@
             "type": "int"
         },
         "serverName": {
+            "type": "string"
+        },
+
+        // AZURE FUNCTIONS Network
+        "ip_func_name": {
+            "type": "string"
+        },
+        "ip_func_sku": {
+            "type": "string"
+        },
+        "ip_func_publicIPAllocationMethod": {
+            "type": "string"
+        },
+        "ip_func_publicIpAddressVersion": {
+            "type": "string"
+        },
+        "ip_func_tier": {
+            "type": "string"
+        },
+        "natGateways_func_name": {
+            "type": "string"
+        },
+        "natGateways_func_sku": {
             "type": "string"
         },
 
@@ -67,6 +93,9 @@
         "onPremiseEndpointPORT": {
             "type": "string"
         },
+        "func_subnet_name": {
+            "type": "String"
+        },
 
         // POWER BI
         "powerbi_name": {
@@ -81,9 +110,6 @@
         "powerbi_mode": {
             "type": "string"
         },
-        "powerbi_vnet_name": {
-            "type": "String"
-        },
         "powerbi_subnet_name": {
             "type": "String"
         },
@@ -92,6 +118,67 @@
         }
     },
     "resources": [
+        // NETWORK
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('vnet_name')]",
+            "location": "westeurope",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('powerbi_subnet_name')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24",
+                            "serviceEndpoints": [
+                                {
+                                    "service": "Microsoft.Sql",
+                                    "locations": [
+                                        "westeurope"
+                                    ]
+                                }
+                            ],
+                            "delegations": [
+                                {
+                                    "name": "Microsoft.PowerPlatform.vnetaccesslinks",
+                                    "properties": {
+                                        "serviceName": "Microsoft.PowerPlatform/vnetaccesslinks"
+                                    }
+                                }
+                            ],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "[parameters('func_subnet_name')]",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24",
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled",
+                            "natGateway": {
+                                "id": "[resourceId('Microsoft.Network/natGateways/', parameters('natGateways_func_name'))]"
+                            },
+                            "delegations": [
+                                {
+                                    "name": "delegation",
+                                    "properties": {
+                                        "serviceName": "Microsoft.Web/serverfarms"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "enableDdosProtection": false
+            }
+        },
+
         // AZURE SQL
         {
             "apiVersion": "2020-11-01-preview",
@@ -121,14 +208,13 @@
                 },
                 {
                     "type": "Microsoft.Sql/servers/virtualNetworkRules",
+                    "apiVersion": "2021-05-01-preview",
+                    "name": "[concat(parameters('serverName'), '/', parameters('powerbi-sql_vnet_rule_name'))]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Sql/servers/', parameters('serverName'))]",
-                        "[resourceId('Microsoft.Sql/servers/databases', parameters('serverName'), parameters('databaseName'))]"
+                        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
                     ],
-                    "apiVersion": "2015-05-01-preview",
-                    "name": "[concat(parameters('databaseName'), '/' ,parameters('powerbi-sql_vnet_rule_name'))]",
                     "properties": {
-                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('powerbi_vnet_name'), parameters('powerbi_subnet_name'))]"
+                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('powerbi_subnet_name'))]"
                     }
                 }
             ]
@@ -136,6 +222,38 @@
 
 
         // AZURE FUNCTION
+        {
+            "apiVersion": "2020-08-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[parameters('ip_func_name')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('ip_func_sku')]",
+                "tier": "[parameters('ip_func_tier')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('ip_func_publicIPAllocationMethod')]",
+                "publicIpAddressVersion": "[parameters('ip_func_publicIpAddressVersion')]"
+            }
+        },
+        {
+            "apiVersion": "2019-09-01",
+            "type": "Microsoft.Network/natGateways",
+            "name": "[parameters('natGateways_func_name')]",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "sku": {
+                "name": "[parameters('natGateways_func_sku')]"
+            },
+            "properties": {
+                "publicIPAddresses": [
+                    {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
+                    }
+                ],
+                "idleTimeoutInMinutes": 4
+            }
+        },
         {
             "apiVersion": "2018-11-01",
             "name": "[parameters('hostingPlanName')]",
@@ -164,14 +282,15 @@
             }
         },
         {
-            "apiVersion": "2018-11-01",
+            "apiVersion": "2021-02-01",
             "name": "[parameters('funcName')]",
             "type": "Microsoft.Web/sites",
             "kind": "functionapp",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
             ],
             "identity": {
                 "type": "SystemAssigned"
@@ -202,7 +321,8 @@
                     "netFrameworkVersion": "[parameters('netFrameworkVersion')]"
                 },
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
-                "clientAffinityEnabled": false
+                "clientAffinityEnabled": false,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('func_subnet_name'))]"
             }
         },
         {
@@ -263,46 +383,6 @@
                     ]
                 },
                 "mode": "[parameters('powerbi_mode')]"
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2020-11-01",
-            "name": "[parameters('powerbi_vnet_name')]",
-            "location": "westeurope",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "10.0.0.0/16"
-                    ]
-                },
-                "subnets": [
-                    {
-                        "name": "[parameters('powerbi_subnet_name')]",
-                        "properties": {
-                            "addressPrefix": "10.0.0.0/24",
-                            "serviceEndpoints": [
-                                {
-                                    "service": "Microsoft.Sql",
-                                    "locations": [
-                                        "westeurope"
-                                    ]
-                                }
-                            ],
-                            "delegations": [
-                                {
-                                    "name": "Microsoft.PowerPlatform.vnetaccesslinks",
-                                    "properties": {
-                                        "serviceName": "Microsoft.PowerPlatform/vnetaccesslinks"
-                                    }
-                                }
-                            ],
-                            "privateEndpointNetworkPolicies": "Enabled",
-                            "privateLinkServiceNetworkPolicies": "Enabled"
-                        }
-                    }
-                ],
-                "enableDdosProtection": false
             }
         }
     ]

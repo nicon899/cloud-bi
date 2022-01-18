@@ -2,6 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "vnet_name": {
+            "value": "bi-dev-vnet"
+        },
         "collation": {
             "value": "SQL_Latin1_General_CP1_CI_AS"
         },
@@ -33,8 +36,27 @@
                 "principalType": "Group"
             }
         },
-
-
+        "ip_func_name": {
+            "value": "bi-dev-ip_func"
+        },
+        "ip_func_sku": {
+            "value": "Standard"
+        },
+        "ip_func_tier": {
+            "value": "Regional"
+        },
+        "ip_func_publicIpAddressVersion": {
+            "value": "IPv4"
+        },
+        "ip_func_publicIPAllocationMethod": {
+            "value": "Static"
+        },
+        "natGateways_func_name": {
+            "value": "bi-dev-natgateway_func"
+        },
+        "natGateways_func_sku": {
+            "value": "Standard"
+        },
         "funcName": {
             "value": "bi-dev-func"
         },
@@ -71,7 +93,9 @@
         "onPremiseEndpointPORT": {
             "value": "1433"
         },
-
+        "func_subnet_name": {
+            "value": "subnet_funcApp"
+        },
         "powerbi_name": {
             "value": "powerbiserviceforcloudbi"
         },
@@ -83,9 +107,6 @@
         },
         "powerbi_mode": {
             "value": "Gen2"
-        },
-        "powerbi_vnet_name": {
-            "value": "bi-dev-vnet_powerbi-vdg"
         },
         "powerbi_subnet_name": {
             "value": "gatewayforpowerbi"
