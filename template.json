@@ -123,7 +123,10 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-11-01",
             "name": "[parameters('vnet_name')]",
-            "location": "westeurope",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/natGateways', parameters('natGateways_func_name'))]"
+            ],
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -139,7 +142,7 @@
                                 {
                                     "service": "Microsoft.Sql",
                                     "locations": [
-                                        "westeurope"
+                                        "[parameters('location')]"
                                     ]
                                 }
                             ],
@@ -211,7 +214,8 @@
                     "apiVersion": "2021-05-01-preview",
                     "name": "[concat(parameters('serverName'), '/', parameters('powerbi-sql_vnet_rule_name'))]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+                        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
+                        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
                     ],
                     "properties": {
                         "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('powerbi_subnet_name'))]"
@@ -241,7 +245,9 @@
             "type": "Microsoft.Network/natGateways",
             "name": "[parameters('natGateways_func_name')]",
             "location": "[parameters('location')]",
-            "tags": {},
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
+            ],
             "sku": {
                 "name": "[parameters('natGateways_func_sku')]"
             },
