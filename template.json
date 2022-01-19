@@ -220,6 +220,19 @@
                     "properties": {
                         "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('powerbi_subnet_name'))]"
                     }
+                },
+                {
+                    "type": "Microsoft.Sql/servers/firewallRules",
+                    "apiVersion": "2021-05-01-preview",
+                    "name": "[concat(parameters('serverName'), '/', 'func_ip')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
+                        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
+                    ],
+                    "properties": {
+                        "endIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]",
+                        "startIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]"
+                    }
                 }
             ]
         },
