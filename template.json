@@ -97,25 +97,41 @@
             "type": "String"
         },
 
+        // KEY VAULT
+        "keyVault_name": {
+            "type": "string"
+        },
+        "role_keyVaultSecretUser": {
+            "type": "string",
+            "defaultValue": "4633458b-17de-408a-b874-0445c86b69e6"
+        },
+
         // POWER BI
-        "powerbi_name": {
+        // "powerbi_name": {
+        //     "type": "string"
+        // },
+        // "powerbi_sku": {
+        //     "type": "string"
+        // },
+        // "powerbi_admin": {
+        //     "type": "string"
+        // },
+        // "powerbi_mode": {
+        //     "type": "string"
+        // },
+        // "powerbi_subnet_name": {
+        //     "type": "String"
+        // },
+        // "powerbi-sql_vnet_rule_name": {
+        //     "type": "String"
+        // }
+
+        // PURVIEW
+        "purview_name": {
             "type": "string"
-        },
-        "powerbi_sku": {
-            "type": "string"
-        },
-        "powerbi_admin": {
-            "type": "string"
-        },
-        "powerbi_mode": {
-            "type": "string"
-        },
-        "powerbi_subnet_name": {
-            "type": "String"
-        },
-        "powerbi-sql_vnet_rule_name": {
-            "type": "String"
         }
+
+
     },
     "resources": [
         // NETWORK
@@ -134,30 +150,30 @@
                     ]
                 },
                 "subnets": [
-                    {
-                        "name": "[parameters('powerbi_subnet_name')]",
-                        "properties": {
-                            "addressPrefix": "10.0.0.0/24",
-                            "serviceEndpoints": [
-                                {
-                                    "service": "Microsoft.Sql",
-                                    "locations": [
-                                        "[parameters('location')]"
-                                    ]
-                                }
-                            ],
-                            "delegations": [
-                                {
-                                    "name": "Microsoft.PowerPlatform.vnetaccesslinks",
-                                    "properties": {
-                                        "serviceName": "Microsoft.PowerPlatform/vnetaccesslinks"
-                                    }
-                                }
-                            ],
-                            "privateEndpointNetworkPolicies": "Enabled",
-                            "privateLinkServiceNetworkPolicies": "Enabled"
-                        }
-                    },
+                    // {
+                    //     "name": "[parameters('powerbi_subnet_name')]",
+                    //     "properties": {
+                    //         "addressPrefix": "10.0.0.0/24",
+                    //         "serviceEndpoints": [
+                    //             {
+                    //                 "service": "Microsoft.Sql",
+                    //                 "locations": [
+                    //                     "[parameters('location')]"
+                    //                 ]
+                    //             }
+                    //         ],
+                    //         "delegations": [
+                    //             {
+                    //                 "name": "Microsoft.PowerPlatform.vnetaccesslinks",
+                    //                 "properties": {
+                    //                     "serviceName": "Microsoft.PowerPlatform/vnetaccesslinks"
+                    //                 }
+                    //             }
+                    //         ],
+                    //         "privateEndpointNetworkPolicies": "Enabled",
+                    //         "privateLinkServiceNetworkPolicies": "Enabled"
+                    //     }
+                    // },
                     {
                         "name": "[parameters('func_subnet_name')]",
                         "properties": {
@@ -209,18 +225,18 @@
                     },
                     "type": "databases"
                 },
-                {
-                    "type": "Microsoft.Sql/servers/virtualNetworkRules",
-                    "apiVersion": "2021-05-01-preview",
-                    "name": "[concat(parameters('serverName'), '/', parameters('powerbi-sql_vnet_rule_name'))]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
-                        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
-                    ],
-                    "properties": {
-                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('powerbi_subnet_name'))]"
-                    }
-                },
+                // {
+                //     "type": "Microsoft.Sql/servers/virtualNetworkRules",
+                //     "apiVersion": "2021-05-01-preview",
+                //     "name": "[concat(parameters('serverName'), '/', parameters('powerbi-sql_vnet_rule_name'))]",
+                //     "dependsOn": [
+                //         "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
+                //         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
+                //     ],
+                //     "properties": {
+                //         "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('powerbi_subnet_name'))]"
+                //     }
+                // },
                 {
                     "type": "Microsoft.Sql/servers/firewallRules",
                     "apiVersion": "2021-05-01-preview",
@@ -236,7 +252,6 @@
                 }
             ]
         },
-
 
         // AZURE FUNCTION
         {
@@ -372,7 +387,7 @@
                         "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]"
                     ],
                     "properties": {
-                        "requiresClientAuthorization": "true",
+                        "requiresClientAuthorization": true,
                         "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
                     }
                 }
@@ -397,25 +412,86 @@
                 "sendKeyName": "RootManageSharedAccessKey",
                 "sendKeyValue": "[listkeys(resourceId('Microsoft.Relay/Namespaces/AuthorizationRules', parameters('relayName'), 'RootManageSharedAccessKey'), '2017-04-01').primaryKey]"
             }
-        }
+        },
 
-        // Power BI
-        ,
+        // KEY VAULT
         {
-            "apiVersion": "2021-01-01",
-            "name": "[parameters('powerbi_name')]",
+            "type": "Microsoft.KeyVault/vaults",
+            "name": "[parameters('keyVault_name')]",
+            "apiVersion": "2018-02-14",
             "location": "[parameters('location')]",
-            "type": "Microsoft.PowerBIDedicated/capacities",
-            "sku": {
-                "name": "[parameters('powerbi_sku')]"
-            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('funcName'))]"
+            ],
             "properties": {
-                "administration": {
-                    "members": [
-                        "[parameters('powerbi_admin')]"
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false,
+                "enableRbacAuthorization": true,
+                "tenantId": "[subscription().tenantId]",
+                "sku": {
+                    "name": "Standard",
+                    "family": "A"
+                },
+                "networkAcls": {
+                    "bypass": "None",
+                    "defaultAction": "Deny",
+                    "ipRules": [
+                        {
+                            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]"
+                        }
                     ]
                 },
-                "mode": "[parameters('powerbi_mode')]"
+                "publicNetworkAccess": false
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "[guid(resourceGroup().id)]",
+            "properties": {
+                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', parameters('role_keyVaultSecretUser'))]",
+                "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('funcName')), '2021-03-01','Full').identity.principalId]"
+            }
+        },
+
+        // Power BI
+
+        // {
+        //     "apiVersion": "2021-01-01",
+        //     "name": "[parameters('powerbi_name')]",
+        //     "location": "[parameters('location')]",
+        //     "type": "Microsoft.PowerBIDedicated/capacities",
+        //     "sku": {
+        //         "name": "[parameters('powerbi_sku')]"
+        //     },
+        //     "properties": {
+        //         "administration": {
+        //             "members": [
+        //                 "[parameters('powerbi_admin')]"
+        //             ]
+        //         },
+        //         "mode": "[parameters('powerbi_mode')]"
+        //     }
+        // }
+
+        // AZURE PURVIEW
+        {
+            "type": "Microsoft.Purview/accounts",
+            "apiVersion": "2021-07-01",
+            "name": "[parameters('purview_name')]",
+            "location": "westeurope",
+            "sku": {
+                "name": "Standard",
+                "capacity": 1
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "cloudConnectors": {},
+                "publicNetworkAccess": "Enabled",
+                "managedResourceGroupName": "[concat('managed-rg-', parameters('purview_name'))]"
             }
         }
     ]

@@ -12,16 +12,16 @@
             "value": "bi-dev-sql-db"
         },
         "tier": {
-            "value": "GeneralPurpose"
+            "value": "Standard"
         },
         "skuName": {
-            "value": "GP_Gen5_2"
+            "value": "Standard"
         },
         "location": {
             "value": "westeurope"
         },
         "maxSizeBytes": {
-            "value": 536870912000
+            "value": 268435456000
         },
         "serverName": {
             "value": "bi-dev-sql-server"
@@ -98,7 +98,7 @@
         },
         "keyVault_name": {
             "value": "bi-dev-keyVault-220120"
-        }
+        },
         // "powerbi_name": {
         //     "value": "powerbiserviceforcloudbi"
         // },
@@ -117,5 +117,8 @@
         // "powerbi-sql_vnet_rule_name": {
         //     "value": "vnetRule_gatewayforpowerbi"
         // }
+        "purview_name": {
+            "value": "bi-dev-purview"
+        }
     }
 }
