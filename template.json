@@ -102,35 +102,53 @@
             "type": "string"
         },
         "role_keyVaultSecretUser": {
-            "type": "string",
-            "defaultValue": "4633458b-17de-408a-b874-0445c86b69e6"
+            "type": "string"
         },
 
         // POWER BI
-        // "powerbi_name": {
-        //     "type": "string"
-        // },
-        // "powerbi_sku": {
-        //     "type": "string"
-        // },
-        // "powerbi_admin": {
-        //     "type": "string"
-        // },
-        // "powerbi_mode": {
-        //     "type": "string"
-        // },
-        // "powerbi_subnet_name": {
-        //     "type": "String"
-        // },
-        // "powerbi-sql_vnet_rule_name": {
-        //     "type": "String"
-        // }
+        "powerbi_name": {
+            "type": "string"
+        },
+        "powerbi_sku": {
+            "type": "string"
+        },
+        "powerbi_admin": {
+            "type": "string"
+        },
+        "powerbi_mode": {
+            "type": "string"
+        },
 
         // PURVIEW
         "purview_name": {
             "type": "string"
-        }
+        },
 
+        // VM
+        "storageAccount-vm_name": {
+            "type": "string"
+        },
+        "vm_name": {
+            "type": "string"
+        },
+        "vm_networkSecurityGroupName": {
+            "type": "string"
+        },
+        "ip-vm_name": {
+            "type": "string"
+        },
+        "vm_subnet_name": {
+            "type": "string"
+        },
+        "nic-vm_name": {
+            "type": "string"
+        },
+        "vm_adminUsername": {
+            "type": "string"
+        },
+        "vm_adminPassword": {
+            "type": "string"
+        }
 
     },
     "resources": [
@@ -177,7 +195,7 @@
                     {
                         "name": "[parameters('func_subnet_name')]",
                         "properties": {
-                            "addressPrefix": "10.0.1.0/24",
+                            "addressPrefix": "10.0.0.0/24",
                             "privateEndpointNetworkPolicies": "Enabled",
                             "privateLinkServiceNetworkPolicies": "Enabled",
                             "natGateway": {
@@ -191,6 +209,14 @@
                                     }
                                 }
                             ]
+                        }
+                    },
+                    {
+                        "name": "[parameters('vm_subnet_name')]",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24",
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
                         }
                     }
                 ],
@@ -248,6 +274,19 @@
                     "properties": {
                         "endIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]",
                         "startIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]"
+                    }
+                },
+                {
+                    "type": "Microsoft.Sql/servers/firewallRules",
+                    "apiVersion": "2021-05-01-preview",
+                    "name": "[concat(parameters('serverName'), '/', 'vm_ip')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
+                        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip-vm_name'))]"
+                    ],
+                    "properties": {
+                        "endIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip-vm_name'))).IpAddress]",
+                        "startIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip-vm_name'))).IpAddress]"
                     }
                 }
             ]
@@ -456,24 +495,23 @@
         },
 
         // Power BI
-
-        // {
-        //     "apiVersion": "2021-01-01",
-        //     "name": "[parameters('powerbi_name')]",
-        //     "location": "[parameters('location')]",
-        //     "type": "Microsoft.PowerBIDedicated/capacities",
-        //     "sku": {
-        //         "name": "[parameters('powerbi_sku')]"
-        //     },
-        //     "properties": {
-        //         "administration": {
-        //             "members": [
-        //                 "[parameters('powerbi_admin')]"
-        //             ]
-        //         },
-        //         "mode": "[parameters('powerbi_mode')]"
-        //     }
-        // }
+        {
+            "apiVersion": "2021-01-01",
+            "name": "[parameters('powerbi_name')]",
+            "location": "[parameters('location')]",
+            "type": "Microsoft.PowerBIDedicated/capacities",
+            "sku": {
+                "name": "[parameters('powerbi_sku')]"
+            },
+            "properties": {
+                "administration": {
+                    "members": [
+                        "[parameters('powerbi_admin')]"
+                    ]
+                },
+                "mode": "[parameters('powerbi_mode')]"
+            }
+        },
 
         // AZURE PURVIEW
         {
@@ -492,6 +530,153 @@
                 "cloudConnectors": {},
                 "publicNetworkAccess": "Enabled",
                 "managedResourceGroupName": "[concat('managed-rg-', parameters('purview_name'))]"
+            }
+        },
+
+        // AZURE VM FOR POWER BI & PURVIEW
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('storageAccount-vm_name')]",
+            "apiVersion": "2016-01-01",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "kind": "Storage",
+            "properties": {}
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[parameters('ip-vm_name')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "vmname": "[parameters('vm_name')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            }
+        },
+        {
+            "name": "[parameters('vm_networkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2016-09-01",
+            "location": "[parameters('location')]",
+            "tags": {
+                "vmname": "[parameters('vm_name')]"
+            },
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-rdp",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "Tcp",
+                            "destinationPortRange": "3389",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('nic-vm_name')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses/', parameters('ip-vm_name'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('vm_networkSecurityGroupName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('ip-vm_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('vm_subnet_name'))]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('vm_networkSecurityGroupName'))]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2018-04-01",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vm_name')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "vmname": "[parameters('vm_name')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/', parameters('storageAccount-vm_name'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces/', parameters('nic-vm_name'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_A8_v2"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vm_name')]",
+                    "adminUsername": "[parameters('vm_adminUsername')]",
+                    "adminPassword": "[parameters('vm_adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('vm_name'),'_OSDisk')]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        }
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('vm_name'),'_DataDisk1')]",
+                            "diskSizeGB": 128,
+                            "lun": 0,
+                            "managedDisk": {
+                                "storageAccountType": "StandardSSD_LRS"
+                            },
+                            "createOption": "Empty"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',parameters('nic-vm_name'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', parameters('storageAccount-vm_name'))).primaryEndpoints.blob]"
+                    }
+                }
             }
         }
     ]

@@ -98,24 +98,48 @@
         },
         "keyVault_name": {
             "value": "bi-dev-keyVault-220120"
+        },
+        "role_keyVaultSecretUser": {
+            "value": "4633458b-17de-408a-b874-0445c86b69e6"
+        },
+        "powerbi_name": {
+            "value": "powerbiserviceforcloudbi"
+        },
+        "powerbi_sku": {
+            "value": "A1"
+        },
+        "powerbi_admin": {
+            "value": "Alice@sag013.onmicrosoft.com"
+        },
+        "powerbi_mode": {
+            "value": "Gen2"
+        },
+        "purview_name": {
+            "value": "bi-dev-purview"
+        },
+        "storageAccount-vm_name": {
+            "value": "bidevstorageaccountforvm"
+        },
+        "vm_name": {
+            "value": "bi-dev-vm"
+        },
+        "ip-vm_name": {
+            "value": "bi-dev-ip_vm"
+        },
+        "nic-vm_name": {
+            "value": "bi-dev-nic_vm"
+        },
+        "vm_adminUsername": {
+            "value": "Cloud-BI"
+        },
+        "vm_networkSecurityGroupName": {
+            "value": "bi-dev-networkSecurityGroup_vm"
+        },
+        "vm_subnet_name": {
+            "value": "subnet_vm"
+        },
+        "vm_adminPassword": {
+            "value": ""
         }
-        // "powerbi_name": {
-        //     "value": "powerbiserviceforcloudbi"
-        // },
-        // "powerbi_sku": {
-        //     "value": "A4"
-        // },
-        // "powerbi_admin": {
-        //     "value": "Alice@sag013.onmicrosoft.com"
-        // },
-        // "powerbi_mode": {
-        //     "value": "Gen2"
-        // },
-        // "powerbi_subnet_name": {
-        //     "value": "gatewayforpowerbi"
-        // },
-        // "powerbi-sql_vnet_rule_name": {
-        //     "value": "vnetRule_gatewayforpowerbi"
-        // }
     }
 }
