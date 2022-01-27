@@ -99,6 +99,9 @@
         "keyVault_name": {
             "value": "bi-dev-keyVault-220120"
         },
+        "keyVault_sku": {
+            "value": "Premium"
+        },
         "role_keyVaultSecretUser": {
             "value": "4633458b-17de-408a-b874-0445c86b69e6"
         },
