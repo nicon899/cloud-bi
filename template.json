@@ -108,20 +108,6 @@
             "type": "string"
         },
 
-        // POWER BI
-        "powerbi_name": {
-            "type": "string"
-        },
-        "powerbi_sku": {
-            "type": "string"
-        },
-        "powerbi_admin": {
-            "type": "string"
-        },
-        "powerbi_mode": {
-            "type": "string"
-        },
-
         // PURVIEW
         "purview_name": {
             "type": "string"
@@ -132,12 +118,6 @@
             "type": "string"
         },
         "vm_name": {
-            "type": "string"
-        },
-        "vm_networkSecurityGroupName": {
-            "type": "string"
-        },
-        "ip-vm_name": {
             "type": "string"
         },
         "vm_subnet_name": {
@@ -151,6 +131,15 @@
         },
         "vm_adminPassword": {
             "type": "string"
+        },
+        "disk_name": {
+            "type": "string"
+        },
+        "bastion_name": {
+            "type": "string"
+        },
+        "ip_bastion_name": {
+            "type": "string"
         }
 
     },
@@ -161,9 +150,9 @@
             "apiVersion": "2020-11-01",
             "name": "[parameters('vnet_name')]",
             "location": "[parameters('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/natGateways', parameters('natGateways_func_name'))]"
-            ],
+            // "dependsOn": [
+            //     "[resourceId('Microsoft.Network/natGateways', parameters('natGateways_func_name'))]"
+            // ],
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -172,58 +161,50 @@
                 },
                 "subnets": [
                     // {
-                    //     "name": "[parameters('powerbi_subnet_name')]",
+                    //     "name": "[parameters('func_subnet_name')]",
                     //     "properties": {
                     //         "addressPrefix": "10.0.0.0/24",
-                    //         "serviceEndpoints": [
-                    //             {
-                    //                 "service": "Microsoft.Sql",
-                    //                 "locations": [
-                    //                     "[parameters('location')]"
-                    //                 ]
-                    //             }
-                    //         ],
+                    //         "privateEndpointNetworkPolicies": "Enabled",
+                    //         "privateLinkServiceNetworkPolicies": "Enabled",
+                    //         "natGateway": {
+                    //             "id": "[resourceId('Microsoft.Network/natGateways/', parameters('natGateways_func_name'))]"
+                    //         },
                     //         "delegations": [
                     //             {
-                    //                 "name": "Microsoft.PowerPlatform.vnetaccesslinks",
+                    //                 "name": "delegation",
                     //                 "properties": {
-                    //                     "serviceName": "Microsoft.PowerPlatform/vnetaccesslinks"
+                    //                     "serviceName": "Microsoft.Web/serverfarms"
                     //                 }
                     //             }
-                    //         ],
-                    //         "privateEndpointNetworkPolicies": "Enabled",
-                    //         "privateLinkServiceNetworkPolicies": "Enabled"
+                    //         ]
                     //     }
                     // },
-                    {
-                        "name": "[parameters('func_subnet_name')]",
-                        "properties": {
-                            "addressPrefix": "10.0.0.0/24",
-                            "privateEndpointNetworkPolicies": "Enabled",
-                            "privateLinkServiceNetworkPolicies": "Enabled",
-                            "natGateway": {
-                                "id": "[resourceId('Microsoft.Network/natGateways/', parameters('natGateways_func_name'))]"
-                            },
-                            "delegations": [
-                                {
-                                    "name": "delegation",
-                                    "properties": {
-                                        "serviceName": "Microsoft.Web/serverfarms"
-                                    }
-                                }
-                            ]
-                        }
-                    },
                     {
                         "name": "[parameters('vm_subnet_name')]",
                         "properties": {
                             "addressPrefix": "10.0.1.0/24",
+                            "serviceEndpoints": [
+                                {
+                                    "service": "Microsoft.Sql",
+                                    "locations": [
+                                        "westeurope"
+                                    ]
+                                }
+                            ],
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "AzureBastionSubnet",
+                        "properties": {
+                            "addressPrefix": "10.0.2.0/26",
                             "privateEndpointNetworkPolicies": "Enabled",
                             "privateLinkServiceNetworkPolicies": "Enabled"
                         }
                     }
-                ],
-                "enableDdosProtection": false
+                ]
             }
         },
 
@@ -255,342 +236,308 @@
                     "type": "databases"
                 },
                 // {
-                //     "type": "Microsoft.Sql/servers/virtualNetworkRules",
+                //     "type": "Microsoft.Sql/servers/firewallRules",
                 //     "apiVersion": "2021-05-01-preview",
-                //     "name": "[concat(parameters('serverName'), '/', parameters('powerbi-sql_vnet_rule_name'))]",
+                //     "name": "[concat(parameters('serverName'), '/', 'func_ip')]",
                 //     "dependsOn": [
                 //         "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
-                //         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
+                //         "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
                 //     ],
                 //     "properties": {
-                //         "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('powerbi_subnet_name'))]"
+                //         "endIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]",
+                //         "startIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]"
                 //     }
                 // },
                 {
-                    "type": "Microsoft.Sql/servers/firewallRules",
+                    "type": "Microsoft.Sql/servers/virtualNetworkRules",
                     "apiVersion": "2021-05-01-preview",
-                    "name": "[concat(parameters('serverName'), '/', 'func_ip')]",
+                    "name": "[concat(parameters('serverName'), '/vmVnetRule')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
-                        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
+                        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
                     ],
                     "properties": {
-                        "endIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]",
-                        "startIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]"
-                    }
-                },
-                {
-                    "type": "Microsoft.Sql/servers/firewallRules",
-                    "apiVersion": "2021-05-01-preview",
-                    "name": "[concat(parameters('serverName'), '/', 'vm_ip')]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]",
-                        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip-vm_name'))]"
-                    ],
-                    "properties": {
-                        "endIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip-vm_name'))).IpAddress]",
-                        "startIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip-vm_name'))).IpAddress]"
+                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('vm_subnet_name'))]",
+                        "ignoreMissingVnetServiceEndpoint": false
                     }
                 }
             ]
         },
 
         // AZURE FUNCTION
-        {
-            "apiVersion": "2020-08-01",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[parameters('ip_func_name')]",
-            "location": "[parameters('location')]",
-            "sku": {
-                "name": "[parameters('ip_func_sku')]",
-                "tier": "[parameters('ip_func_tier')]"
-            },
-            "properties": {
-                "publicIPAllocationMethod": "[parameters('ip_func_publicIPAllocationMethod')]",
-                "publicIpAddressVersion": "[parameters('ip_func_publicIpAddressVersion')]"
-            }
-        },
-        {
-            "apiVersion": "2019-09-01",
-            "type": "Microsoft.Network/natGateways",
-            "name": "[parameters('natGateways_func_name')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
-            ],
-            "sku": {
-                "name": "[parameters('natGateways_func_sku')]"
-            },
-            "properties": {
-                "publicIPAddresses": [
-                    {
-                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
-                    }
-                ],
-                "idleTimeoutInMinutes": 4
-            }
-        },
-        {
-            "apiVersion": "2019-06-01",
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[parameters('storageAccountName')]",
-            "location": "[parameters('location')]",
-            "sku": {
-                "name": "Standard_LRS"
-            },
-            "properties": {
-                "supportsHttpsTrafficOnly": true,
-                "minimumTlsVersion": "TLS1_2"
-            }
-        },
-        {
-            "apiVersion": "2018-11-01",
-            "name": "[parameters('hostingPlanName')]",
-            "type": "Microsoft.Web/serverfarms",
-            "location": "[parameters('location')]",
-            "properties": {
-                "name": "[parameters('hostingPlanName')]"
-            },
-            "sku": {
-                "Tier": "[parameters('sku')]",
-                "Name": "[parameters('skuCode')]"
-            }
-        },
-        {
-            "apiVersion": "2021-02-01",
-            "name": "[parameters('funcName')]",
-            "type": "Microsoft.Web/sites",
-            "kind": "functionapp",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
-            ],
-            "identity": {
-                "type": "SystemAssigned"
-            },
-            "properties": {
-                "name": "[parameters('funcName')]",
-                "siteConfig": {
-                    "appSettings": [
-                        {
-                            "name": "FUNCTIONS_EXTENSION_VERSION",
-                            "value": "~4"
-                        },
-                        {
-                            "name": "FUNCTIONS_WORKER_RUNTIME",
-                            "value": "dotnet"
-                        },
-                        {
-                            "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
-                        }
-                    ],
-                    "cors": {
-                        "allowedOrigins": [
-                            "https://portal.azure.com"
-                        ]
-                    },
-                    "alwaysOn": "[parameters('alwaysOn')]",
-                    "netFrameworkVersion": "[parameters('netFrameworkVersion')]"
-                },
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
-                "clientAffinityEnabled": false,
-                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('func_subnet_name'))]"
-            },
-            "resources": [
-                {
-                    "type": "Microsoft.Web/sites/config",
-                    "apiVersion": "2021-02-01",
-                    "name": "[concat(parameters('funcName'), '/web')]",
-                    "location": "[parameters('location')]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/sites', parameters('funcName'))]"
-                    ],
-                    "properties": {
-                        "vnetRouteAllEnabled": true
-                    }
-                }
-            ]
-        },
-        {
-            "apiVersion": "2018-01-01-preview",
-            "name": "[parameters('relayName')]",
-            "type": "Microsoft.Relay/Namespaces",
-            "location": "[parameters('location')]",
-            "resources": [
-                {
-                    "apiVersion": "2017-04-01",
-                    "name": "[parameters('hybridConnectionName')]",
-                    "type": "HybridConnections",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]"
-                    ],
-                    "properties": {
-                        "requiresClientAuthorization": true,
-                        "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "[concat(parameters('funcName'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
-            "type": "Microsoft.Web/sites/hybridConnectionNamespaces/relays",
-            "apiVersion": "2018-02-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcName'))]",
-                "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]",
-                "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
-            ],
-            "location": "[parameters('location')]",
-            "properties": {
-                "serviceBusNamespace": "[parameters('relayName')]",
-                "relayName": "[parameters('hybridConnectionName')]",
-                "relayArmUri": "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]",
-                "hostName": "[parameters('onPremiseEndpointIP')]",
-                "port": "[parameters('onPremiseEndpointPORT')]",
-                "sendKeyName": "RootManageSharedAccessKey",
-                "sendKeyValue": "[listkeys(resourceId('Microsoft.Relay/Namespaces/AuthorizationRules', parameters('relayName'), 'RootManageSharedAccessKey'), '2017-04-01').primaryKey]"
-            }
-        },
+        // {
+        //     "apiVersion": "2020-08-01",
+        //     "type": "Microsoft.Network/publicIPAddresses",
+        //     "name": "[parameters('ip_func_name')]",
+        //     "location": "[parameters('location')]",
+        //     "sku": {
+        //         "name": "[parameters('ip_func_sku')]",
+        //         "tier": "[parameters('ip_func_tier')]"
+        //     },
+        //     "properties": {
+        //         "publicIPAllocationMethod": "[parameters('ip_func_publicIPAllocationMethod')]",
+        //         "publicIpAddressVersion": "[parameters('ip_func_publicIpAddressVersion')]"
+        //     }
+        // },
+        // {
+        //     "apiVersion": "2019-09-01",
+        //     "type": "Microsoft.Network/natGateways",
+        //     "name": "[parameters('natGateways_func_name')]",
+        //     "location": "[parameters('location')]",
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
+        //     ],
+        //     "sku": {
+        //         "name": "[parameters('natGateways_func_sku')]"
+        //     },
+        //     "properties": {
+        //         "publicIPAddresses": [
+        //             {
+        //                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_func_name'))]"
+        //             }
+        //         ],
+        //         "idleTimeoutInMinutes": 4
+        //     }
+        // },
+        // {
+        //     "apiVersion": "2019-06-01",
+        //     "type": "Microsoft.Storage/storageAccounts",
+        //     "name": "[parameters('storageAccountName')]",
+        //     "location": "[parameters('location')]",
+        //     "sku": {
+        //         "name": "Standard_LRS"
+        //     },
+        //     "properties": {
+        //         "supportsHttpsTrafficOnly": true,
+        //         "minimumTlsVersion": "TLS1_2"
+        //     }
+        // },
+        // {
+        //     "apiVersion": "2018-11-01",
+        //     "name": "[parameters('hostingPlanName')]",
+        //     "type": "Microsoft.Web/serverfarms",
+        //     "location": "[parameters('location')]",
+        //     "properties": {
+        //         "name": "[parameters('hostingPlanName')]"
+        //     },
+        //     "sku": {
+        //         "Tier": "[parameters('sku')]",
+        //         "Name": "[parameters('skuCode')]"
+        //     }
+        // },
+        // {
+        //     "apiVersion": "2021-02-01",
+        //     "name": "[parameters('funcName')]",
+        //     "type": "Microsoft.Web/sites",
+        //     "kind": "functionapp",
+        //     "location": "[parameters('location')]",
+        //     "dependsOn": [
+        //         "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+        //         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        //         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
+        //     ],
+        //     "identity": {
+        //         "type": "SystemAssigned"
+        //     },
+        //     "properties": {
+        //         "name": "[parameters('funcName')]",
+        //         "siteConfig": {
+        //             "appSettings": [
+        //                 {
+        //                     "name": "FUNCTIONS_EXTENSION_VERSION",
+        //                     "value": "~4"
+        //                 },
+        //                 {
+        //                     "name": "FUNCTIONS_WORKER_RUNTIME",
+        //                     "value": "dotnet"
+        //                 },
+        //                 {
+        //                     "name": "AzureWebJobsStorage",
+        //                     "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+        //                 }
+        //             ],
+        //             "cors": {
+        //                 "allowedOrigins": [
+        //                     "https://portal.azure.com"
+        //                 ]
+        //             },
+        //             "alwaysOn": "[parameters('alwaysOn')]",
+        //             "netFrameworkVersion": "[parameters('netFrameworkVersion')]"
+        //         },
+        //         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+        //         "clientAffinityEnabled": false,
+        //         "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('func_subnet_name'))]"
+        //     },
+        //     "resources": [
+        //         {
+        //             "type": "Microsoft.Web/sites/config",
+        //             "apiVersion": "2021-02-01",
+        //             "name": "[concat(parameters('funcName'), '/web')]",
+        //             "location": "[parameters('location')]",
+        //             "dependsOn": [
+        //                 "[resourceId('Microsoft.Web/sites', parameters('funcName'))]"
+        //             ],
+        //             "properties": {
+        //                 "vnetRouteAllEnabled": true
+        //             }
+        //         }
+        //     ]
+        // },
+        // {
+        //     "apiVersion": "2018-01-01-preview",
+        //     "name": "[parameters('relayName')]",
+        //     "type": "Microsoft.Relay/Namespaces",
+        //     "location": "[parameters('location')]",
+        //     "resources": [
+        //         {
+        //             "apiVersion": "2017-04-01",
+        //             "name": "[parameters('hybridConnectionName')]",
+        //             "type": "HybridConnections",
+        //             "dependsOn": [
+        //                 "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]"
+        //             ],
+        //             "properties": {
+        //                 "requiresClientAuthorization": true,
+        //                 "userMetadata": "[concat('[{\"key\":\"endpoint\",\"value\":\"', parameters('onPremiseEndpoint'), '\"}]')]"
+        //             }
+        //         }
+        //     ]
+        // },
+        // {
+        //     "name": "[concat(parameters('funcName'), '/', parameters('relayName'), '/', parameters('hybridConnectionName'))]",
+        //     "type": "Microsoft.Web/sites/hybridConnectionNamespaces/relays",
+        //     "apiVersion": "2018-02-01",
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.Web/sites', parameters('funcName'))]",
+        //         "[resourceId('Microsoft.Relay/Namespaces', parameters('relayName'))]",
+        //         "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]"
+        //     ],
+        //     "location": "[parameters('location')]",
+        //     "properties": {
+        //         "serviceBusNamespace": "[parameters('relayName')]",
+        //         "relayName": "[parameters('hybridConnectionName')]",
+        //         "relayArmUri": "[resourceId('Microsoft.Relay/Namespaces/Hybridconnections', parameters('relayName'), parameters('hybridConnectionName'))]",
+        //         "hostName": "[parameters('onPremiseEndpointIP')]",
+        //         "port": "[parameters('onPremiseEndpointPORT')]",
+        //         "sendKeyName": "RootManageSharedAccessKey",
+        //         "sendKeyValue": "[listkeys(resourceId('Microsoft.Relay/Namespaces/AuthorizationRules', parameters('relayName'), 'RootManageSharedAccessKey'), '2017-04-01').primaryKey]"
+        //     }
+        // },
 
         // KEY VAULT
-        {
-            "type": "Microsoft.KeyVault/vaults",
-            "name": "[parameters('keyVault_name')]",
-            "apiVersion": "2019-09-01",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcName'))]"
-            ],
-            "properties": {
-                "enableRbacAuthorization": true,
-                "enableSoftDelete": true,
-                "enablePurgeProtection": true, // ???
-                "tenantId": "[subscription().tenantId]",
-                "sku": {
-                    "name": "[parameters('keyVault_sku')]",
-                    "family": "A"
-                },
-                "networkAcls": {
-                    "bypass": "None",
-                    "defaultAction": "Deny",
-                    "ipRules": [
-                        {
-                            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]"
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2018-09-01-preview",
-            "name": "[guid(resourceGroup().id)]",
-            "properties": {
-                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', parameters('role_keyVaultSecretUser'))]",
-                "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('funcName')), '2021-03-01','Full').identity.principalId]"
-            }
-        },
-
-        // Power BI
-        {
-            "apiVersion": "2021-01-01",
-            "name": "[parameters('powerbi_name')]",
-            "location": "[parameters('location')]",
-            "type": "Microsoft.PowerBIDedicated/capacities",
-            "sku": {
-                "name": "[parameters('powerbi_sku')]"
-            },
-            "properties": {
-                "administration": {
-                    "members": [
-                        "[parameters('powerbi_admin')]"
-                    ]
-                },
-                "mode": "[parameters('powerbi_mode')]"
-            }
-        },
+        // {
+        //     "type": "Microsoft.KeyVault/vaults",
+        //     "name": "[parameters('keyVault_name')]",
+        //     "apiVersion": "2019-09-01",
+        //     "location": "[parameters('location')]",
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.Web/sites', parameters('funcName'))]"
+        //     ],
+        //     "properties": {
+        //         "enableRbacAuthorization": true,
+        //         "enableSoftDelete": true,
+        //         "enablePurgeProtection": true, // ???
+        //         "tenantId": "[subscription().tenantId]",
+        //         "sku": {
+        //             "name": "[parameters('keyVault_sku')]",
+        //             "family": "A"
+        //         },
+        //         "networkAcls": {
+        //             "bypass": "None",
+        //             "defaultAction": "Deny",
+        //             "ipRules": [
+        //                 {
+        //                     "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('ip_func_name'))).IpAddress]"
+        //                 }
+        //             ]
+        //         }
+        //     }
+        // },
+        // {
+        //     "type": "Microsoft.Authorization/roleAssignments",
+        //     "apiVersion": "2018-09-01-preview",
+        //     "name": "[guid(resourceGroup().id)]",
+        //     "properties": {
+        //         "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', parameters('role_keyVaultSecretUser'))]",
+        //         "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('funcName')), '2021-03-01','Full').identity.principalId]"
+        //     }
+        // },
 
         // AZURE PURVIEW
+        // {
+        //     "type": "Microsoft.Purview/accounts",
+        //     "apiVersion": "2021-07-01",
+        //     "name": "[parameters('purview_name')]",
+        //     "location": "westeurope",
+        //     "sku": {
+        //         "name": "Standard",
+        //         "capacity": 1
+        //     },
+        //     "identity": {
+        //         "type": "SystemAssigned"
+        //     },
+        //     "properties": {
+        //         "cloudConnectors": {},
+        //         "publicNetworkAccess": "Enabled",
+        //         "managedResourceGroupName": "[concat('managed-rg-', parameters('purview_name'))]"
+        //     }
+        // },
+
+        // VMs for Power BI & Purview
         {
-            "type": "Microsoft.Purview/accounts",
-            "apiVersion": "2021-07-01",
-            "name": "[parameters('purview_name')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('ip_bastion_name')]",
             "location": "westeurope",
             "sku": {
                 "name": "Standard",
-                "capacity": 1
-            },
-            "identity": {
-                "type": "SystemAssigned"
+                "tier": "Regional"
             },
             "properties": {
-                "cloudConnectors": {},
-                "publicNetworkAccess": "Enabled",
-                "managedResourceGroupName": "[concat('managed-rg-', parameters('purview_name'))]"
+                "ipAddress": "20.23.252.83",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
             }
         },
-
-        // AZURE VM FOR POWER BI & PURVIEW
         {
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[parameters('storageAccount-vm_name')]",
-            "apiVersion": "2016-01-01",
-            "location": "[parameters('location')]",
+            "type": "Microsoft.Network/bastionHosts",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('bastion_name')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_bastion_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
+            ],
             "sku": {
-                "name": "Standard_LRS"
-            },
-            "kind": "Storage",
-            "properties": {}
-        },
-        {
-            "apiVersion": "2016-03-30",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[parameters('ip-vm_name')]",
-            "location": "[parameters('location')]",
-            "tags": {
-                "vmname": "[parameters('vm_name')]"
+                "name": "Standard"
             },
             "properties": {
-                "publicIPAllocationMethod": "Static"
-            }
-        },
-        {
-            "name": "[parameters('vm_networkSecurityGroupName')]",
-            "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2016-09-01",
-            "location": "[parameters('location')]",
-            "tags": {
-                "vmname": "[parameters('vm_name')]"
-            },
-            "properties": {
-                "securityRules": [
+                "dnsName": "bst-cc5fa61a-d0ba-4d1b-be0c-570496c2ca6a.bastion.azure.com",
+                "ipConfigurations": [
                     {
-                        "name": "default-allow-rdp",
+                        "name": "IpConf",
                         "properties": {
-                            "priority": 1000,
-                            "sourceAddressPrefix": "*",
-                            "protocol": "Tcp",
-                            "destinationPortRange": "3389",
-                            "access": "Allow",
-                            "direction": "Inbound",
-                            "sourcePortRange": "*",
-                            "destinationAddressPrefix": "*"
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_bastion_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), 'AzureBastionSubnet')]"
+                            }
                         }
                     }
                 ]
             }
         },
+
         {
-            "apiVersion": "2016-03-30",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[parameters('nic-vm_name')]",
-            "location": "[parameters('location')]",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('nic-vm_name'), copyIndex())]",
+            "location": "westeurope",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses/', parameters('ip-vm_name'))]",
-                "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('vm_networkSecurityGroupName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
             ],
             "properties": {
@@ -599,84 +546,99 @@
                         "name": "ipconfig1",
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('ip-vm_name'))]"
-                            },
                             "subnet": {
                                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('vm_subnet_name'))]"
-                            }
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
                         }
                     }
                 ],
-                "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('vm_networkSecurityGroupName'))]"
-                }
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": true,
+                "enableIPForwarding": false
+            },
+            "copy": {
+                "name": "vm_niccopy",
+                "count": 2
             }
         },
         {
-            "apiVersion": "2018-04-01",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[parameters('vm_name')]",
-            "location": "[parameters('location')]",
-            "tags": {
-                "vmname": "[parameters('vm_name')]"
-            },
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('vm_name'), copyIndex())]",
+            "location": "westeurope",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/', parameters('storageAccount-vm_name'))]",
-                "[resourceId('Microsoft.Network/networkInterfaces/', parameters('nic-vm_name'))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('nic-vm_name'), copyIndex()))]"
+            ],
+            "zones": [
+                "[copyIndex(1)]"
             ],
             "identity": {
                 "type": "SystemAssigned"
             },
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "Standard_A8_v2"
+                    "vmSize": "Standard_D8s_v5"
+                },
+                // "storageProfile": {
+                //     "osDisk": {
+                //         "createOption": "fromImage",
+                //         "managedDisk": {
+                //             "storageAccountType": "Premium_LRS"
+                //         }
+                //     },
+                //     "imageReference": {
+                //         "publisher": "MicrosoftWindowsServer",
+                //         "offer": "WindowsServer",
+                //         "sku": "2019-datacenter-gensecond",
+                //         "version": "latest"
+                //     },
+                //     "dataDisks": []
+                // },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
+                    },
+                    "imageReference": {
+                        "id": "/subscriptions/4ba29de7-89b1-4691-b37d-8cf299c54f6c/resourceGroups/bi-backup/providers/Microsoft.Compute/images/bi-dev-vm-image-20220128021651"
+                    }
                 },
                 "osProfile": {
-                    "computerName": "[parameters('vm_name')]",
+                    "computerName": "[concat(parameters('vm_name'), copyIndex())]",
                     "adminUsername": "[parameters('vm_adminUsername')]",
-                    "adminPassword": "[parameters('vm_adminPassword')]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "2019-Datacenter",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "name": "[concat(parameters('vm_name'),'_OSDisk')]",
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "StandardSSD_LRS"
+                    "adminPassword": "[parameters('vm_adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByOS",
+                            "assessmentMode": "ImageDefault",
+                            "enableHotpatching": false
                         }
-                    },
-                    "dataDisks": [
-                        {
-                            "name": "[concat(parameters('vm_name'),'_DataDisk1')]",
-                            "diskSizeGB": 128,
-                            "lun": 0,
-                            "managedDisk": {
-                                "storageAccountType": "StandardSSD_LRS"
-                            },
-                            "createOption": "Empty"
-                        }
-                    ]
+                    }
                 },
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',parameters('nic-vm_name'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('nic-vm_name'), copyIndex()))]"
                         }
                     ]
                 },
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
-                        "enabled": true,
-                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', parameters('storageAccount-vm_name'))).primaryEndpoints.blob]"
+                        "enabled": true
                     }
                 }
+            },
+            "copy": {
+                "name": "vmcopy",
+                "count": 2
             }
         }
     ]

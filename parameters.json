@@ -28,12 +28,12 @@
         },
         "administrators": {
             "value": {
-                "administratorType": "activeDirectory",
-                "login": "Cloud-BI",
-                "sid": "d0448de2-6769-4467-a022-862fdf3e4bf3",
-                "tenantId": "194b8bcb-4aa6-476f-b7a5-bda4b3ae61bd",
-                "azureADOnlyAuthentication": true,
-                "principalType": "Group"
+                "administratorType": "ActiveDirectory",
+                "principalType": "Group",
+                "login": "CloudBI",
+                "sid": "5b3adb68-4478-4430-b613-a40c588ee3e7",
+                "tenantId": "7ce19120-8fcd-401a-ac47-7c24d2e4c009",
+                "azureADOnlyAuthentication": true
             }
         },
         "ip_func_name": {
@@ -105,18 +105,6 @@
         "role_keyVaultSecretUser": {
             "value": "4633458b-17de-408a-b874-0445c86b69e6"
         },
-        "powerbi_name": {
-            "value": "powerbiserviceforcloudbi"
-        },
-        "powerbi_sku": {
-            "value": "A1"
-        },
-        "powerbi_admin": {
-            "value": "Alice@sag013.onmicrosoft.com"
-        },
-        "powerbi_mode": {
-            "value": "Gen2"
-        },
         "purview_name": {
             "value": "bi-dev-purview"
         },
@@ -126,23 +114,26 @@
         "vm_name": {
             "value": "bi-dev-vm"
         },
-        "ip-vm_name": {
-            "value": "bi-dev-ip_vm"
-        },
         "nic-vm_name": {
             "value": "bi-dev-nic_vm"
         },
         "vm_adminUsername": {
             "value": "Cloud-BI"
         },
-        "vm_networkSecurityGroupName": {
-            "value": "bi-dev-networkSecurityGroup_vm"
-        },
         "vm_subnet_name": {
             "value": "subnet_vm"
         },
         "vm_adminPassword": {
             "value": ""
+        },
+        "disk_name": {
+            "value": "bi-dev-disk_vm"
+        },
+        "bastion_name": {
+            "value": "bi-dev-bastion"
+        },
+        "ip_bastion_name": {
+            "value": "bi-dev-ip_bastion"
         }
     }
 }

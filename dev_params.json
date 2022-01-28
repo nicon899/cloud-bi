@@ -105,18 +105,6 @@
         "role_keyVaultSecretUser": {
             "value": "4633458b-17de-408a-b874-0445c86b69e6"
         },
-        "powerbi_name": {
-            "value": "powerbiserviceforcloudbi"
-        },
-        "powerbi_sku": {
-            "value": "A1"
-        },
-        "powerbi_admin": {
-            "value": "Alice@sag013.onmicrosoft.com"
-        },
-        "powerbi_mode": {
-            "value": "Gen2"
-        },
         "purview_name": {
             "value": "bi-dev-purview"
         },
