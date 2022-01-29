@@ -97,7 +97,7 @@
             "value": "subnet_funcApp"
         },
         "keyVault_name": {
-            "value": "bi-dev-keyVault-220120"
+            "value": "bi-dev-keyVault-220129a"
         },
         "keyVault_sku": {
             "value": "Premium"
@@ -107,9 +107,6 @@
         },
         "purview_name": {
             "value": "bi-dev-purview"
-        },
-        "storageAccount-vm_name": {
-            "value": "bidevstorageaccountforvm"
         },
         "vm_name": {
             "value": "bi-dev-vm"
@@ -125,9 +122,6 @@
         },
         "vm_adminPassword": {
             "value": ""
-        },
-        "disk_name": {
-            "value": "bi-dev-disk_vm"
         },
         "bastion_name": {
             "value": "bi-dev-bastion"
