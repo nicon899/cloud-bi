@@ -386,27 +386,16 @@
                         ]
                     },
                     "alwaysOn": "[parameters('alwaysOn')]",
-                    "netFrameworkVersion": "[parameters('netFrameworkVersion')]"
+                    "netFrameworkVersion": "[parameters('netFrameworkVersion')]",
+                    "vnetRouteAllEnabled": true,
+                    "ftpsState": "FtpsOnly",
+                    "remoteDebuggingEnabled": false
                 },
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
                 "clientAffinityEnabled": false,
                 "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('func_subnet_name'))]",
                 "httpsOnly": true
-            },
-            "resources": [
-                {
-                    "type": "Microsoft.Web/sites/config",
-                    "apiVersion": "2021-02-01",
-                    "name": "[concat(parameters('funcName'), '/web')]",
-                    "location": "[parameters('location')]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/sites', parameters('funcName'))]"
-                    ],
-                    "properties": {
-                        "vnetRouteAllEnabled": true
-                    }
-                }
-            ]
+            }
         },
 
         {
@@ -493,7 +482,7 @@
                     "family": "A"
                 },
                 "networkAcls": {
-                    "bypass": "None",
+                    "bypass": "AzureServices",
                     "defaultAction": "Deny",
                     "ipRules": [
                         {
@@ -511,183 +500,183 @@
                 "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', parameters('role_keyVaultSecretUser'))]",
                 "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('funcName')), '2021-03-01','Full').identity.principalId]"
             }
-        }
-        // {
-        //     "type": "Microsoft.Authorization/roleAssignments",
-        //     "apiVersion": "2018-09-01-preview",
-        //     "name": "[guid(concat(resourceGroup().id, '2'))]",
-        //     "properties": {
-        //         "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', parameters('role_keyVaultSecretUser'))]",
-        //         "principalId": "[reference(resourceId('Microsoft.Purview/accounts', parameters('purview_name')), '2021-07-01','Full').identity.principalId]"
-        //     }
-        // },
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "[guid(concat(resourceGroup().id, '2'))]",
+            "properties": {
+                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', parameters('role_keyVaultSecretUser'))]",
+                "principalId": "[reference(resourceId('Microsoft.Purview/accounts', parameters('purview_name')), '2021-07-01','Full').identity.principalId]"
+            }
+        },
 
         // ====================== AZURE PURVIEW ======================
-        // {
-        //     "type": "Microsoft.Purview/accounts",
-        //     "apiVersion": "2021-07-01",
-        //     "name": "[parameters('purview_name')]",
-        //     "location": "westeurope",
-        //     "sku": {
-        //         "name": "Standard",
-        //         "capacity": 1
-        //     },
-        //     "identity": {
-        //         "type": "SystemAssigned"
-        //     },
-        //     "properties": {
-        //         "cloudConnectors": {},
-        //         "publicNetworkAccess": "Disabled",
-        //         "managedResourceGroupName": "[concat('managed-rg-', parameters('purview_name'))]"
-        //     }
-        // },
+        {
+            "type": "Microsoft.Purview/accounts",
+            "apiVersion": "2021-07-01",
+            "name": "[parameters('purview_name')]",
+            "location": "westeurope",
+            "sku": {
+                "name": "Standard",
+                "capacity": 1
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "cloudConnectors": {},
+                "publicNetworkAccess": "Enabled",
+                "managedResourceGroupName": "[concat('managed-rg-', parameters('purview_name'))]"
+            }
+        },
 
         // ====================== VMs for Power BI & Purview ======================
-        // {
-        //     "type": "Microsoft.Network/publicIPAddresses",
-        //     "apiVersion": "2020-11-01",
-        //     "name": "[parameters('ip_bastion_name')]",
-        //     "location": "westeurope",
-        //     "sku": {
-        //         "name": "Standard",
-        //         "tier": "Regional"
-        //     },
-        //     "properties": {
-        //         "ipAddress": "20.23.252.83",
-        //         "publicIPAddressVersion": "IPv4",
-        //         "publicIPAllocationMethod": "Static",
-        //         "idleTimeoutInMinutes": 4,
-        //         "ipTags": []
-        //     }
-        // },
-        // {
-        //     "type": "Microsoft.Network/bastionHosts",
-        //     "apiVersion": "2020-11-01",
-        //     "name": "[parameters('bastion_name')]",
-        //     "location": "westeurope",
-        //     "dependsOn": [
-        //         "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_bastion_name'))]",
-        //         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
-        //     ],
-        //     "sku": {
-        //         "name": "Standard"
-        //     },
-        //     "properties": {
-        //         "dnsName": "bst-cc5fa61a-d0ba-4d1b-be0c-570496c2ca6a.bastion.azure.com",
-        //         "ipConfigurations": [
-        //             {
-        //                 "name": "IpConf",
-        //                 "properties": {
-        //                     "privateIPAllocationMethod": "Dynamic",
-        //                     "publicIPAddress": {
-        //                         "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_bastion_name'))]"
-        //                     },
-        //                     "subnet": {
-        //                         "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), 'AzureBastionSubnet')]"
-        //                     }
-        //                 }
-        //             }
-        //         ]
-        //     }
-        // },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('ip_bastion_name')]",
+            "location": "westeurope",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "ipAddress": "20.23.252.83",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/bastionHosts",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('bastion_name')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_bastion_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
+            ],
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "dnsName": "bst-cc5fa61a-d0ba-4d1b-be0c-570496c2ca6a.bastion.azure.com",
+                "ipConfigurations": [
+                    {
+                        "name": "IpConf",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('ip_bastion_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), 'AzureBastionSubnet')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
 
-        // {
-        //     "type": "Microsoft.Network/networkInterfaces",
-        //     "apiVersion": "2020-11-01",
-        //     "name": "[concat(parameters('nic-vm_name'), copyIndex())]",
-        //     "location": "westeurope",
-        //     "dependsOn": [
-        //         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
-        //     ],
-        //     "properties": {
-        //         "ipConfigurations": [
-        //             {
-        //                 "name": "ipconfig1",
-        //                 "properties": {
-        //                     "privateIPAllocationMethod": "Dynamic",
-        //                     "subnet": {
-        //                         "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('vm_subnet_name'))]"
-        //                     },
-        //                     "primary": true,
-        //                     "privateIPAddressVersion": "IPv4"
-        //                 }
-        //             }
-        //         ],
-        //         "dnsSettings": {
-        //             "dnsServers": []
-        //         },
-        //         "enableAcceleratedNetworking": true,
-        //         "enableIPForwarding": false
-        //     },
-        //     "copy": {
-        //         "name": "vm_niccopy",
-        //         "count": 2
-        //     }
-        // },
-        // {
-        //     "type": "Microsoft.Compute/virtualMachines",
-        //     "apiVersion": "2021-07-01",
-        //     "name": "[concat(parameters('vm_name'), copyIndex())]",
-        //     "location": "westeurope",
-        //     "dependsOn": [
-        //         "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('nic-vm_name'), copyIndex()))]"
-        //     ],
-        //     "zones": [
-        //         "[copyIndex(1)]"
-        //     ],
-        //     "identity": {
-        //         "type": "SystemAssigned"
-        //     },
-        //     "properties": {
-        //         "hardwareProfile": {
-        //             "vmSize": "Standard_D8s_v5"
-        //         },
-        //         "storageProfile": {
-        //             "osDisk": {
-        //                 "createOption": "fromImage",
-        //                 "managedDisk": {
-        //                     "storageAccountType": "Premium_LRS"
-        //                 }
-        //             },
-        //             "imageReference": {
-        //                 "publisher": "MicrosoftWindowsServer",
-        //                 "offer": "WindowsServer",
-        //                 "sku": "2019-datacenter-gensecond",
-        //                 "version": "latest"
-        //             },
-        //             "dataDisks": []
-        //         },
-        //         "osProfile": {
-        //             "computerName": "[concat(parameters('vm_name'), copyIndex())]",
-        //             "adminUsername": "[parameters('vm_adminUsername')]",
-        //             "adminPassword": "[parameters('vm_adminPassword')]",
-        //             "windowsConfiguration": {
-        //                 "provisionVMAgent": true,
-        //                 "enableAutomaticUpdates": true,
-        //                 "patchSettings": {
-        //                     "patchMode": "AutomaticByOS",
-        //                     "assessmentMode": "ImageDefault",
-        //                     "enableHotpatching": false
-        //                 }
-        //             }
-        //         },
-        //         "networkProfile": {
-        //             "networkInterfaces": [
-        //                 {
-        //                     "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('nic-vm_name'), copyIndex()))]"
-        //                 }
-        //             ]
-        //         },
-        //         "diagnosticsProfile": {
-        //             "bootDiagnostics": {
-        //                 "enabled": true
-        //             }
-        //         }
-        //     },
-        //     "copy": {
-        //         "name": "vmcopy",
-        //         "count": 2
-        //     }
-        // }
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('nic-vm_name'), copyIndex())]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet_name'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnet_name'), parameters('vm_subnet_name'))]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": true,
+                "enableIPForwarding": false
+            },
+            "copy": {
+                "name": "vm_niccopy",
+                "count": 2
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('vm_name'), copyIndex())]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('nic-vm_name'), copyIndex()))]"
+            ],
+            "zones": [
+                "[copyIndex(1)]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D8s_v5"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
+                    },
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-datacenter-gensecond",
+                        "version": "latest"
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[concat(parameters('vm_name'), copyIndex())]",
+                    "adminUsername": "[parameters('vm_adminUsername')]",
+                    "adminPassword": "[parameters('vm_adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByOS",
+                            "assessmentMode": "ImageDefault",
+                            "enableHotpatching": false
+                        }
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('nic-vm_name'), copyIndex()))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            },
+            "copy": {
+                "name": "vmcopy",
+                "count": 2
+            }
+        }
     ]
 }
